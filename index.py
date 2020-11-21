@@ -18,19 +18,32 @@ def create_task():
         abort(400)
     params = request.json['params']
     order_history_df = run_strategy(data_df, params)
-    report = performance_report(order_history_df)
+    result = {'performanceReport': {'profit': 0, 'max_dd': 0, 'max_ru': 0,
+                                    'num_win': 0, 'num_loss': 0,
+                                    'total_win_profit': 0,
+                                    'total_loss_profit': 0,
+                                    'ave_win': 0, 'ave_loss': 0,
+                                    'win_rate': 0, 'balance': 0,
+                                    'startBalance': 0,
+                                    'relativeYearlyProfit': 0, 'market': 0,
+                                    'sharpe': 0,
+                                    'trades': 0}}
 
-    result = {
-        'performance_report': {'profit': report['profit'], 'max_dd': report['max_dd'], 'max_ru': report['max_ru'],
-                               'num_win': report['num_win'], 'num_loss': report['num_loss'],
-                               'total_win_profit': report['total_win_profit'],
-                               'total_loss_profit': report['total_loss_profit'],
-                               'ave_win': report['ave_win'], 'ave_loss': report['ave_loss'],
-                               'win_rate': report['win_rate'], 'balance': report['balance'],
-                               'startBalance': report['startBalance'],
-                               'relativeYearlyProfit': report['relativeYearlyProfit'], 'market': report['market'],
-                               'sharpe': report['sharpe'],
-                               'trades': report['trades']}}
+    if order_history_df.shape[0] != 0:
+        report = performance_report(order_history_df)
+        print(report)
+        result = {
+            'performanceReport': {'profit': report['profit'], 'max_dd': report['max_dd'], 'max_ru': report['max_ru'],
+                                  'num_win': report['num_win'], 'num_loss': report['num_loss'],
+                                  'total_win_profit': report['total_win_profit'],
+                                  'total_loss_profit': report['total_loss_profit'],
+                                  'ave_win': report['ave_win'], 'ave_loss': report['ave_loss'],
+                                  'win_rate': report['win_rate'], 'balance': report['balance'],
+                                  'startBalance': report['startBalance'],
+                                  'relativeYearlyProfit': report['relativeYearlyProfit'], 'market': report['market'],
+                                  'sharpe': report['sharpe'],
+                                  'trades': report['trades']}}
+
     return jsonify(result), 200
 
 
@@ -204,7 +217,9 @@ def performance_report(order_df):
             'ave_win': float(ave_win), 'ave_loss': float(ave_loss),
             'win_rate': float(win_rate), 'balance': float(balance), 'startBalance': float(start_balance),
             'relativeYearlyProfit': float(relative_yearly_profit), 'market': float(market), 'sharpe': float(sharpe),
-            'trades': int(trades)}
+            'trades': int(trades), 'startPrice': float(start_price), 'endPrice': float(end_price),
+            'relativeProfit': float(relative_profit)}
+
 
 if __name__ == '__main__':
     app.run()

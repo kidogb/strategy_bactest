@@ -167,4 +167,4 @@ def convert_ohlcv_5m_to_15m(ohlcv5):
 # ticker_1m_df.to_csv("ticker-data-1m.csv")
 
 # get_all_bitmex("LTCUSD", "5m", save=True)
-get_all_binance("LTCUSDT", "30m", save=True)
+get_all_binance("EOSUSDT", "30m", save=True)
