@@ -45,13 +45,14 @@ def minutes_of_new_data(symbol, kline_size, data, source):
         old = datetime.strptime('1 Jan 2017', '%d %b %Y')
     elif source == "bitmex":
         old = \
-        bitmex_client.Trade.Trade_getBucketed(symbol=symbol, binSize=kline_size, count=1, reverse=False).result()[0][0][
-            'timestamp']
+            bitmex_client.Trade.Trade_getBucketed(symbol=symbol, binSize=kline_size, count=1, reverse=False).result()[
+                0][0][
+                'timestamp']
     if source == "binance": new = pd.to_datetime(binance_client.get_klines(symbol=symbol, interval=kline_size)[-1][0],
                                                  unit='ms')
     if source == "bitmex": new = \
-    bitmex_client.Trade.Trade_getBucketed(symbol=symbol, binSize=kline_size, count=1, reverse=True).result()[0][0][
-        'timestamp']
+        bitmex_client.Trade.Trade_getBucketed(symbol=symbol, binSize=kline_size, count=1, reverse=True).result()[0][0][
+            'timestamp']
     return old, new
 
 
@@ -154,6 +155,26 @@ def convert_ohlcv_5m_to_15m(ohlcv5):
     return ohlcv15
 
 
+def convert_data_frame_5m_to_30m(data):
+    converted_data = []
+    if data.shape[0] > 6:
+        for i in range(0, data.shape[0] - 5, 6):
+            high = data[i:i + 5]['high'].max()
+            low = data[i:i + 5]['low'].min()
+            volume = data[i:i + 5]['volume'].sum()
+            converted_data.append({
+                'timestamp': data.iloc[i]['timestamp'],
+                'open': data.iloc[i]['open'],
+                'high': high,
+                'low': low,
+                'close': data.iloc[i + 5]['close'],
+                'volume': volume
+            })
+    else:
+        raise Exception('Too few 5m candles')
+    return pd.DataFrame(converted_data)
+
+
 # get_all_bitmex('XBTUSD', '1m', save = True)
 
 
@@ -166,5 +187,6 @@ def convert_ohlcv_5m_to_15m(ohlcv5):
 # ticker_1m_df = pd.DataFrame(tick_data)
 # ticker_1m_df.to_csv("ticker-data-1m.csv")
 
-# get_all_bitmex("LTCUSD", "5m", save=True)
-get_all_binance("EOSUSDT", "30m", save=True)
+get_all_bitmex("LTCUSD", "5m", save=True)
+# get_all_binance("LTCUSDT", "30m", save=True)
+# get_all_binance("EOSUSDT", "30m", save=True)
