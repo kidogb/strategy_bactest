@@ -57,7 +57,7 @@ def minutes_of_new_data(symbol, kline_size, data, source):
 
 
 def get_all_bitmex(symbol, kline_size, save=False):
-    filename = '%s-%s-data.csv' % (symbol, kline_size)
+    filename = 'data/%s-%s-data.csv' % (symbol, kline_size)
     if os.path.isfile(filename):
         data_df = pd.read_csv(filename)
     else:
@@ -86,7 +86,7 @@ def get_all_bitmex(symbol, kline_size, save=False):
 
 
 def get_all_binance(symbol, kline_size, save=False):
-    filename = '%s-%s-data.csv' % (symbol, kline_size)
+    filename = 'data/%s-%s-data.csv' % (symbol, kline_size)
     if os.path.isfile(filename):
         data_df = pd.read_csv(filename)
     else:
@@ -187,6 +187,6 @@ def convert_data_frame_5m_to_30m(data):
 # ticker_1m_df = pd.DataFrame(tick_data)
 # ticker_1m_df.to_csv("ticker-data-1m.csv")
 
-get_all_bitmex("LTCUSD", "5m", save=True)
+get_all_bitmex("ETHUSD", "5m", save=True)
 # get_all_binance("LTCUSDT", "30m", save=True)
 # get_all_binance("EOSUSDT", "30m", save=True)
