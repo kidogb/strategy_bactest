@@ -11,12 +11,14 @@ def hello():
     return "Hello World!"
 
 
-@app.route('/api/v1.0/backtest', methods=['POST'])
-def create_task():
-    data_df = pd.read_csv("data/LTCUSDT-30m-data.csv")
-    if not request.json or not 'params' in request.json:
+@app.route('/api/v1.0/<symbol>/backtest', methods=['POST'])
+def create_task(symbol):
+    if not request.json:
         abort(400)
-    params = request.json['params']
+    # symbol = request.view_args['symbol']
+    params = request.json
+    candle = params['CANDLE']
+    data_df = pd.read_csv("data/{symbol}-{candle}-data.csv".format(symbol=symbol, candle=candle))
     order_history_df = run_strategy(data_df, params)
     result = {'performanceReport': {'profit': 0, 'max_dd': 0, 'max_ru': 0,
                                     'num_win': 0, 'num_loss': 0,
@@ -57,7 +59,6 @@ def run_strategy(data, params):
 
     order_history = []
     entry_price = 0
-    exit_price = 0
     dd = 0
     ru = 0
     dd_percent = 0
@@ -65,8 +66,6 @@ def run_strategy(data, params):
 
     sma_timeframe = params['SMA_TF']
     adx_timeframe = params['ADX_TF']
-    rsi_bull_timeframe = params['RSI_BULL_TF']
-    rsi_bear_timeframe = params['RSI_BEAR_TF']
     rsi_bull_high = params['RSI_BULL_HIGH']
     rsi_bull_low = params['RSI_BULL_LOW']
     rsi_bear_high = params['RSI_BEAR_HIGH']
@@ -83,8 +82,6 @@ def run_strategy(data, params):
     sma_slow_count = 0
     sma_fast_count = 0
     adx_count = 0
-    rsi_bull_count = 0
-    rsi_bear_count = 0
 
     in_position = False
     in_fake_position = False  # position if dont have stop loss/take profit
@@ -127,65 +124,75 @@ def run_strategy(data, params):
         # dd, ru
         if in_position:
             dd = min(dd, price)
-            dd_percent = 100 * (dd / price - 1)
+            dd_percent = 100 * (dd / entry_price - 1)
             ru = max(ru, price)
-            ru_percent = 100 * (ru / price - 1)
+            ru_percent = 100 * (ru / entry_price - 1)
             # stop/take profit
             if (1 - price / entry_price) > stop_loss / 100 or (price / entry_price - 1) > take_profit / 100:
                 # print("Sell at: ", price)
                 # print("------------")
-                exit_price = price
                 # save history
                 order_history.append(
-                    {"entry": entry_price, "exit": exit_price, "profit": 100 * (exit_price / entry_price - 1),
+                    {"entry": entry_price, "exit": price, "profit": 100 * (price / entry_price - 1),
                      "draw_down": dd, "run_up": ru, "draw_down_percent": dd_percent, "run_up_percent": ru_percent})
                 in_position = False
-        else:
-            dd = 0
-            ru = 0
-            dd_percent = 0
-            ru_percent = 0
+                dd = 0
+                ru = 0
+                dd_percent = 0
+                ru_percent = 0
 
         if is_bull_market:
-            if adx_value > adx_high:
-                rsi_bull_high_adx = rsi_bull_high + bull_mod_high
-            elif adx_value < adx_low:
-                rsi_bull_low_adx = rsi_bull_low + bull_mod_low
-            if not in_position and rsi_bull_value >= rsi_bull_high:
+            rsi_bull_high_adx = rsi_bull_high + bull_mod_high if adx_value >= adx_high else rsi_bull_high
+            rsi_bull_low_adx = rsi_bull_low + bull_mod_low if adx_value < adx_high else rsi_bull_low
+            if not in_fake_position and not in_position and rsi_bull_value >= rsi_bull_high_adx:
                 # print("------------")
                 # print("Buy at: ", price)
                 in_position = True
+                in_fake_position = True
                 entry_price = price
                 dd = ru = price
-            elif in_position and rsi_bull_value <= rsi_bull_low:
+            elif in_position and rsi_bull_value <= rsi_bull_low_adx:
                 # print("Sell at: ", price)
                 # print("------------")
-                exit_price = price
                 # save history
                 order_history.append(
-                    {"entry": entry_price, "exit": exit_price, "profit": 100 * (exit_price / entry_price - 1),
+                    {"entry": entry_price, "exit": price, "profit": 100 * (price / entry_price - 1),
                      "draw_down": dd, "run_up": ru, "draw_down_percent": dd_percent, "run_up_percent": ru_percent})
                 in_position = False
+                in_fake_position = False
+                dd = 0
+                ru = 0
+                dd_percent = 0
+                ru_percent = 0
+            elif rsi_bull_value <= rsi_bull_low:
+                in_fake_position = False
 
         elif is_bear_market:
             if adx_value > adx_high:
-                rsi_bear_high_adx = rsi_bear_high + bear_mod_high
+                rsi_bear_high = rsi_bear_high + bear_mod_high
             elif adx_value < adx_low:
-                rsi_bear_low_adx = rsi_bear_low + bear_mod_low
-            if not in_position and rsi_bear_value >= rsi_bear_high:
+                rsi_bear_low = rsi_bear_low + bear_mod_low
+            if not in_fake_position and not in_position and rsi_bear_value >= rsi_bear_high:
                 # print("------------")
                 # print("Buy at: ", price)
                 in_position = True
+                in_fake_position = True
                 entry_price = price
                 dd = ru = price
             elif in_position and rsi_bear_value <= rsi_bear_low:
                 # print("Sell at: ", price)
                 # print("------------")
-                exit_price = price
                 order_history.append(
-                    {"entry": entry_price, "exit": exit_price, "profit": 100 * (exit_price / entry_price - 1),
+                    {"entry": entry_price, "exit": price, "profit": 100 * (price / entry_price - 1),
                      "draw_down": dd, "run_up": ru, "draw_down_percent": dd_percent, "run_up_percent": ru_percent})
                 in_position = False
+                in_fake_position = False
+                dd = 0
+                ru = 0
+                dd_percent = 0
+                ru_percent = 0
+            elif rsi_bear_value <= rsi_bear_low:
+                in_fake_position = False
     return pd.DataFrame(order_history)
 
 
