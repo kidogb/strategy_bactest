@@ -18,7 +18,7 @@ def create_task(symbol):
     # symbol = request.view_args['symbol']
     params = request.json
     candle = params['CANDLE']
-    data_df = pd.read_csv("data/{symbol}-{candle}-data.csv".format(symbol=symbol, candle=candle))
+    data_df = pd.read_csv("data/{symbol}-{candle}-data-train.csv".format(symbol=symbol, candle=candle))
     order_history_df = run_strategy(data_df, params)
     result = {'performanceReport': {'profit': 0, 'max_dd': 0, 'max_ru': 0,
                                     'num_win': 0, 'num_loss': 0,
