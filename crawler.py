@@ -63,7 +63,8 @@ def get_all_bitmex(symbol, kline_size, save=False):
     else:
         data_df = pd.DataFrame()
     oldest_point, newest_point = minutes_of_new_data(symbol, kline_size, data_df, source="bitmex")
-    # oldest_point = datetime.fromisoformat('2017-06-01 00:05:00+00:00')
+    # oldest_point = datetime.fromisoformat('2017-06-01 00:00:00+00:00')
+    oldest_point = datetime.fromisoformat('2017-06-01 00:00:00+00:00')
     delta_min = (newest_point - oldest_point).total_seconds() / 60
     # print (oldest_point, type(oldest_point))
     # print (delta_min)
@@ -94,7 +95,7 @@ def get_all_binance(symbol, kline_size, save=False):
     oldest_point, newest_point = minutes_of_new_data(symbol, kline_size, data_df, source="binance")
     delta_min = (newest_point - oldest_point).total_seconds() / 60
     available_data = math.ceil(delta_min / binsizes[kline_size])
-    if oldest_point == datetime.strptime('1 Jan 2017', '%d %b %Y'):
+    if oldest_point == datetime.strptime('15 Dec 2017', '%d %b %Y'):
         print('Downloading all available %s data for %s. Be patient..!' % (kline_size, symbol))
     else:
         print('Downloading %d minutes of new data available for %s, i.e. %d instances of %s data.' % (
@@ -187,6 +188,15 @@ def convert_data_frame_5m_to_30m(data):
 # ticker_1m_df = pd.DataFrame(tick_data)
 # ticker_1m_df.to_csv("ticker-data-1m.csv")
 
-get_all_bitmex("ETHUSD", "5m", save=True)
-# get_all_binance("LTCUSDT", "30m", save=True)
+# get_all_bitmex("XBTUSD", "1d", save=True)
+# get_all_binance("XLMUSDT", "30m", save=True)
+# get_all_binance("ADAUSDT", "30m", save=True)
+# get_all_binance("BCHUSDT", "30m", save=True)
+# get_all_binance("BNBUSDT", "30m", save=True)
+# get_all_binance("EOSUSDT", "30m", save=True)
+# get_all_binance("XMRUSDT", "30m", save=True)
+# get_all_binance("TRXUSDT", "30m", save=True)
+get_all_binance("XEMUSDT", "30m", save=True)
+get_all_binance("THETAUSDT", "30m", save=True)
+get_all_binance("NEOUSDT", "30m", save=True)
 # get_all_binance("EOSUSDT", "30m", save=True)
